@@ -40,7 +40,7 @@ Habits Tracker is a simple Python script that allows users to track their habits
 
 ## Example
 ```bash
-python python Main.py
+python Main.py
 ```
 ## Contributing
 
