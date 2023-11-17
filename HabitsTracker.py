@@ -28,9 +28,9 @@ class Tracker():
         else:
             self.Data = {"Habits": {
                 "Sleep": {"Goal": "Sleep on time", "Time_Frame": 1, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
-                "Workout": {"Goal": "Workout 1hour", "Time_Frame": 1, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
-                "Cigarettes": {"Goal": "No Smoking", "Time_Frame": 30, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
-                "Alcohol": {"Goal": "No Alcohal", "Time_Frame": 30, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
+                "Workout": {"Goal": "Workout 1hour", "Time_Frame": 2, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
+                "Cigarettes": {"Goal": "No Smoking", "Time_Frame": 21, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
+                "Alcohol": {"Goal": "No Alcohal", "Time_Frame": 31, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
                 "Journal": {"Goal": "Journal your week", "Time_Frame": 7, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)}
                 }
             }
@@ -67,23 +67,24 @@ class Tracker():
         # Generate a formatted table with habit information
         self.Table = PrettyTable() 
         self.Table.clear_rows()
-        self.Table.field_names = ["\033[1m\033[96m Habit's Title \033[0m", "\033[1m\033[94m Your Aim and Goal \033[0m", "\033[1m\033[95m Time Frame \033[0m", "\033[1m\033[95m Time Frame(In days) \033[0m", "\033[1m\033[91m Status \033[0m", "\033[1m\033[92m Remaining Time \033[0m", "\033[1m\033[93m Current Streak \033[0m","\033[1m\033[93m Best Streak \033[0m"]
+        self.Table.field_names = ["\033[1m\033[96m Habit's Title \033[0m", "\033[1m\033[94m Your Aim and Goal \033[0m", "\033[1m\033[95m Time Frame \033[0m", "\033[1m\033[95m Time Frame in days \033[0m", "\033[1m\033[91m Status \033[0m", "\033[1m\033[92m Remaining Time \033[0m", "\033[1m\033[93m Current Streak(In days) \033[0m","\033[1m\033[93m Best Streak(In days) \033[0m"]
         for habit, details in self.Data["Habits"].items():        
             if details['Status'] == 0:
-                Col5 = "\033[91mIncomplete\033[0m"
+                Col5 = "\033[91m Incomplete \033[0m"
             else:
-                Col5 = "\033[92mComplete\033[0m"
+                Col5 = "\033[92m Complete \033[0m"
             if details['Streak'] == 0 and details['Status'] == 0:
                 Col6 = f'\033[90m {str((datetime.datetime.strptime(details["Time"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=details["Time_Frame"])) - self.TodaysDate).split(".")[0]} \033[0m'
             elif details['Streak'] != 0 and details['Status'] == 0:
                 Col6 = f'\033[1m {str((datetime.datetime.strptime(details["Time"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=details["Time_Frame"])) - self.TodaysDate).split(".")[0]} \033[0m'
             else:
                 Col6 = f'\033[92m {str((datetime.datetime.strptime(details["Time"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=details["Time_Frame"])) - self.TodaysDate).split(".")[0]} \033[0m'
-            if  details['Time_Frame'] > 1:
-                Col4 = f"\033[95m{details['Time_Frame']} days\033[0m"
+            
+            if details['Time_Frame'] > 1:
+                Col4 = f"\033[95m {details['Time_Frame']} days \033[0m"
             else: 
-                Col4 = f"\033[95m{details['Time_Frame']} day\033[0m"
-            self.Table.add_row([f"\033[96m{habit}\033[0m", f"\033[94m{details['Goal']}\033[0m", f"\033[95m{self.DaysToWeeks(details['Time_Frame'])}\033[0m", Col4, Col5,Col6, f"\033[93m{details['Streak']}\033[0m",f"\033[93m{details['BestStreak']}\033[0m"])
+                Col4 = f"\033[95m {details['Time_Frame']} day \033[0m"
+            self.Table.add_row([f"\033[96m {habit} \033[0m", f"\033[94m {details['Goal']} \033[0m", f"\033[95m {self.DaysToWeeks(details['Time_Frame'])} \033[0m", Col4, Col5,Col6, f"\033[93m {details['Streak']}{self.strDay(details['Streak'] * details['Time_Frame'])} \033[0m",f"\033[93m {details['BestStreak']}{self.strDay(details['BestStreak'] * details['Time_Frame'])} \033[0m"])
         return self.Table
     
     def ListofHabits(self):
@@ -134,3 +135,12 @@ class Tracker():
                 Output = Output + "s"
         Output = Output + " "
         return Output
+    
+    def strDay(self,x):
+        if x > 1:
+            x = " or (" + str(x) + " days)"
+        elif x == 0:
+            x = ""
+        else:
+            x = " or (" + str(x) + " day)"
+        return x
