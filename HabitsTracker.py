@@ -137,6 +137,7 @@ class Tracker():
         return Output
     
     def strDay(self,x):
+        # Convert integer value of days to a clean string
         if x > 1:
             x = " or (" + str(x) + " days)"
         elif x == 0:
