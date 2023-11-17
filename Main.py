@@ -62,7 +62,7 @@ while True:
         print()
         aflag = True
         while aflag:
-            best = input(f"{MainColor} How much is your 'Best Streak' record of all time for this habit? {ResetColor}")
+            best = input(f"{MainColor} How much is your 'Best Streak' record of all time in cycles for this habit? {ResetColor}")
             if best.isdigit():
                 aflag = False
             else:
