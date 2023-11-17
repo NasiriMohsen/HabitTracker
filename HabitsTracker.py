@@ -111,7 +111,7 @@ class Tracker():
                 print("\033[1m\033[92m Status Updated! \033[0m")
             else: 
                 print("\033[1m\033[92m Status already Updated! \033[0m")
-            # Update best streak if applicable
+            # Update the best streak if applicable
             if self.Data["Habits"][Title]["Streak"] > self.Data["Habits"][Title]["BestStreak"]:
                 self.Data["Habits"][Title]["BestStreak"] = self.Data["Habits"][Title]["Streak"]
             self.Save_Data(self.Data)
@@ -137,7 +137,7 @@ class Tracker():
         return Output
     
     def strDay(self,x):
-        # Convert integer value of days to a clean string
+        # Convert the integer value of days to a clean string
         if x > 1:
             x = " or (" + str(x) + " days)"
         elif x == 0:
