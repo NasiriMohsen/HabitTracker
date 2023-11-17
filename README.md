@@ -25,9 +25,9 @@ Habits Tracker is a simple Python script that allows users to track their habits
 ```
 
 2. Run the script:
-
+```bash
    python Main.py
-
+```
 
 ## Usage
 
@@ -39,9 +39,9 @@ Habits Tracker is a simple Python script that allows users to track their habits
 - Type 'Q' to exit the program.
 
 ## Example
-
+```bash
 python python Main.py
-
+```
 ## Contributing
 
 ## License
