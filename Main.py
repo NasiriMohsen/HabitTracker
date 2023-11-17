@@ -1,23 +1,34 @@
 from HabitsTracker import Tracker
 
+# Create an instance of the Tracker class
 habits = Tracker()
 
+# Define color codes for console output
 MainColor = "\033[92m"
 ResetColor = "\033[0m"
 YellowColor = "\033[93m"
+
+# Welcome message
 print(f"{YellowColor} Progress is Progress no matter how small! {ResetColor}")
 print(f"{MainColor} Hello and Welcome! {YellowColor}(^_^) ")
 print(f"{MainColor} You may use the commands bellow to navigate! {ResetColor}")
+
+# User interaction loop
 while True:
+    # Display the habits table
     print(habits.TableofHabits())
     print()
+    # Display command options
     print(f"{MainColor} To show everything so far use: \033[1m{YellowColor}'S' {MainColor}or \033[1m{YellowColor}'s'{MainColor}! {ResetColor}")
     print(f"{MainColor} To mark your daily task use: \033[1m{YellowColor}'C' {MainColor}or \033[1m{YellowColor}'c'{MainColor}! {ResetColor}")
     print(f"{MainColor} To add a new Habit use: \033[1m{YellowColor}'A' {MainColor}or \033[1m{YellowColor}'a'{MainColor}! {ResetColor}")
     print(f"{MainColor} To remove a Habit use: \033[1m{YellowColor}'R' {MainColor}or \033[1m{YellowColor}'r'{MainColor}! {ResetColor}")
     print(f"{MainColor} To exit program use: \033[1m{YellowColor}'Q' {MainColor}or \033[1m{YellowColor}'q'{MainColor}! {ResetColor}")
+    
+    # Get user input
     user = input(f"{MainColor} You: {ResetColor}").lower()
     
+    # Add a new habit
     if user == "a": 
         print()
         title = input(f"{MainColor} Choose a 'Title' for this habit: {ResetColor}")
@@ -58,20 +69,30 @@ while True:
                 print(f"{MainColor} Please enter a number! {ResetColor}")
         print()
         habits.AddHabit(title,goal,int(timefr),int(streak),stat,int(best))  
+    
+    # Remove a habit
     elif user == "r":
         print(habits.ListofHabits())
         user = input(f"{MainColor} Which habit would you like to remove? {ResetColor}")
         habits.RemoveHabit(user)
+    
+    # Show the table again
     elif user == "s":
         pass
+
+    # Mark a daily task
     elif user == "c":
         print(habits.ListofHabits())
         user = input(f"{MainColor} For which Habit have you completed your objective today? {ResetColor}")
         habits.CheckHabit(user)
+    
+    # Exit program
     elif user == "q":
         print(f"{MainColor} Thank you for using Habits Tracker! {YellowColor}(^_^) ")
         print(f"{MainColor} Have a great day! {ResetColor}")
         break
+    
+    # Handle invalid input
     else:
         print(f"\033[91m Invalid Input! Please use the commands above! {ResetColor}")
  
