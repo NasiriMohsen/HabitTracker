@@ -2,146 +2,352 @@ import json
 import os
 import datetime
 from prettytable import PrettyTable
+from time import sleep
+
+def time_now():
+    # Get current time
+    return datetime.datetime.now() + datetime.timedelta(days=8)
 
 class Tracker():
-    def __init__(self):
-        # Get the current date and time
-        self.TodaysDate = datetime.datetime.now()
-
-        # Check if the data file exists and laod it
-        if os.path.exists('./Data.json'):
-            with open('./Data.json', 'r') as file:
-                self.Data = json.load(file)
-            
-            # Check habits and update their status based on time frame
-            for habit in self.Data["Habits"]:
-                if self.TodaysDate >= (datetime.datetime.strptime(self.Data["Habits"][habit]["Time"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=self.Data["Habits"][habit]["Time_Frame"])):
-                    if self.Data["Habits"][habit]["Status"] == 0 and self.Data["Habits"][habit]["Streak"] != 0:
-                        print(f'\033[1m\033[91m You have lost your {habit} { self.Data["Habits"][habit]["Streak"] } Day Streak! \033[0m')
-                        self.Data["Habits"][habit]["Streak"] = 0
-                    # Update habit status and time
-                    self.Data["Habits"][habit]["Status"] = 0
-                    self.Data["Habits"][habit]["Time"] = str(self.TodaysDate)
-                    self.Save_Data(self.Data)
-
-        # If the data file doesn't exist, create a default
+    def __init__(self,path = './Data.json'):
+        #load the JSON file
+        self.data_file_path = path
+        self.load_data()
+    
+    def add_habit(self, title, goal, time_frame, frequency):
+        """Add a new habit to the data file.
+        Args:
+            title (str): Title of habit.
+            goal (str): Description of habit.
+            time_frame (int): Time limit of habit.
+            frequency (int): number defined for task completion.
+        """
+        if title in self.data["Habits"]:
+            print("\033[1m\033[91m Habit already exists! \033[0m")
         else:
-            self.Data = {"Habits": {
-                "Sleep": {"Goal": "Sleep on time", "Time_Frame": 1, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
-                "Workout": {"Goal": "Workout 1hour", "Time_Frame": 2, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
-                "Cigarettes": {"Goal": "No Smoking", "Time_Frame": 21, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
-                "Alcohol": {"Goal": "No Alcohal", "Time_Frame": 31, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)},
-                "Journal": {"Goal": "Journal your week", "Time_Frame": 7, "Streak": 0, "Status": 0,"BestStreak": 0,"Time": str(self.TodaysDate)}
-                }
+            self.data["Habits"][title] = {
+                "Goal": goal,
+                "Time_Frame": time_frame,
+                "Created": str(time_now()),
+                "Frequency": frequency,
+                "Counter":0,
+                "Timer":"",
+                "Previous_Timer":"",
+                "Streak_cycle": [],
+                "BestStreak": 0,
+                "Counter_History": [],
+                "Start_Time": [],
+                "Complete": False
             }
-            self.Save_Data(self.Data)
+            self.save_data()
+            print("\033[1m\033[92m Habit added! \033[0m")
 
-    def Save_Data(self,Data):
-        # Save data to the JSON file
-        with open('./Data.json', 'w') as file:
-            json.dump(Data, file, indent=2)
-     
-    def AddHabit(self,Title,Goal,TimeFrame,Streak,Status,BestStreak):
-        # Add a new habit to the data
-        self.Data["Habits"][Title] = {
-            "Goal": Goal,
-            "Time_Frame": TimeFrame,
-            "Streak": Streak,
-            "Status": Status,
-            "BestStreak": BestStreak,
-            "Time": str(self.TodaysDate)
-        }
-        self.Save_Data(self.Data)
-        print("\033[1m\033[92m Habit Added! \033[0m")
-
-    def RemoveHabit(self,Title):
-        # Remove a habit from the data
-        if Title in self.Data["Habits"]:
-            del self.Data["Habits"][Title]
-            self.Save_Data(self.Data)
-            print("\033[1m\033[92m Habit Removed! \033[0m")
+    def remove_habit(self,title):
+        """Remove a habit from data file.
+        Args:
+            title (str): Title of habit to be removed.
+        """
+        if title in self.data["Habits"]:
+            del self.data["Habits"][title]
+            self.save_data()
+            print("\033[1m\033[92m Habit removed! \033[0m")
         else:
-            print("\033[1m\033[91m Habit Not Found! \033[0m")
-        
-    def TableofHabits(self):
-        # Generate a formatted table with habit information
-        self.Table = PrettyTable() 
-        self.Table.clear_rows()
-        self.Table.field_names = ["\033[1m\033[96m Habit's Title \033[0m", "\033[1m\033[94m Your Aim and Goal \033[0m", "\033[1m\033[95m Time Frame \033[0m", "\033[1m\033[95m Time Frame in days \033[0m", "\033[1m\033[91m Status \033[0m", "\033[1m\033[92m Remaining Time \033[0m", "\033[1m\033[93m Current Streak(In days) \033[0m","\033[1m\033[93m Best Streak(In days) \033[0m"]
-        for habit, details in self.Data["Habits"].items():        
-            if details['Status'] == 0:
-                Col5 = "\033[91m Incomplete \033[0m"
-            else:
-                Col5 = "\033[92m Complete \033[0m"
-            if details['Streak'] == 0 and details['Status'] == 0:
-                Col6 = f'\033[90m {str((datetime.datetime.strptime(details["Time"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=details["Time_Frame"])) - self.TodaysDate).split(".")[0]} \033[0m'
-            elif details['Streak'] != 0 and details['Status'] == 0:
-                Col6 = f'\033[1m {str((datetime.datetime.strptime(details["Time"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=details["Time_Frame"])) - self.TodaysDate).split(".")[0]} \033[0m'
-            else:
-                Col6 = f'\033[92m {str((datetime.datetime.strptime(details["Time"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=details["Time_Frame"])) - self.TodaysDate).split(".")[0]} \033[0m'
-            
-            if details['Time_Frame'] > 1:
-                Col4 = f"\033[95m {details['Time_Frame']} days \033[0m"
-            else: 
-                Col4 = f"\033[95m {details['Time_Frame']} day \033[0m"
-            self.Table.add_row([f"\033[96m {habit} \033[0m", f"\033[94m {details['Goal']} \033[0m", f"\033[95m {self.DaysToWeeks(details['Time_Frame'])} \033[0m", Col4, Col5,Col6, f"\033[93m {details['Streak']}{self.strDay(details['Streak'] * details['Time_Frame'])} \033[0m",f"\033[93m {details['BestStreak']}{self.strDay(details['BestStreak'] * details['Time_Frame'])} \033[0m"])
-        return self.Table
+            print("\033[1m\033[91m Habit not found! \033[0m")
     
-    def ListofHabits(self):
-        # Generate a list of habit names
-        self.Table = PrettyTable()
-        self.Table.clear_rows()
-        NamesList = []
-        for habit in self.Data["Habits"]:        
-            NamesList.append("\033[93m " + habit + " \033[0m")
-        self.Table.field_names = NamesList
-        self.Table.horizontal_char = " "
-        self.Table.vertical_char = " "
-        self.Table.junction_char = " "
-        return self.Table
-    
-    def CheckHabit(self,Title):
-        # Update habit status and streaks
-        if Title in self.Data["Habits"]:
+    def check_off_habit(self,title):
+        """Mark a task of a specific habit
+        Args:
+            title (str): Title of the habit to mark.
+        """
+        if title in self.data["Habits"]:
             # Update habit status and streak
-            if self.Data["Habits"][Title]["Status"] != 1: 
-                self.Data["Habits"][Title]["Status"] = 1
-                self.Data["Habits"][Title]["Streak"] = self.Data["Habits"][Title]["Streak"] + 1 
-                self.Data["Habits"][Title]["Time"] = str(self.TodaysDate)
-                print("\033[1m\033[92m Status Updated! \033[0m")
-            else: 
-                print("\033[1m\033[92m Status already Updated! \033[0m")
-            # Update the best streak if applicable
-            if self.Data["Habits"][Title]["Streak"] > self.Data["Habits"][Title]["BestStreak"]:
-                self.Data["Habits"][Title]["BestStreak"] = self.Data["Habits"][Title]["Streak"]
-            self.Save_Data(self.Data)
+            if self.data["Habits"][title]["Complete"]:
+                print("\033[1m\033[91m Habit already completed! \033[0m")
+            self.data["Habits"][title]["Counter"] += 1
+            self.update_habit_status()
+            sleep(0.1)
+            self.data["Habits"][title]["Counter_History"].append(str(time_now())) 
+            self.update_habit_status()
+            
         else:
             print("\033[1m\033[91m Habit not found! \033[0m")
 
-    def DaysToWeeks(self,Input):
-        # Convert days to weeks for better readability
-        Weeks = Input // 7
-        Days = Input % 7
-        Output = " "
-        if Weeks != 0:
-            Output = Output + str(Weeks) + " week"
-            if Weeks > 1:
-                Output = Output + "s"
-        if Weeks != 0 and Days != 0:
-            Output =  Output + " & "
-        if Days != 0:
-            Output =  Output + str(Days) + " day"
-            if Days > 1:
-                Output = Output + "s"
-        Output = Output + " "
-        return Output
-    
-    def strDay(self,x):
-        # Convert the integer value of days to a clean string
-        if x > 1:
-            x = " or (" + str(x) + " days)"
-        elif x == 0:
-            x = ""
+    def update_habit_status(self):
+        """Proccess the loaded data and updates the file 
+        """
+        for habit in self.data["Habits"]:
+            habit_data = self.data["Habits"][habit]
+
+            if habit_data["Streak_cycle"] == [] and habit_data["Counter"] == 1 and habit_data["Start_Time"] == []:
+                habit_data["Start_Time"].append(str(time_now()))
+                habit_data["Timer"] = str(time_now())
+                print("\033[1m\033[92m You have started a habit! \033[0m")
+
+            if habit_data["Counter"] == habit_data["Frequency"] and habit_data["Complete"] == False:
+                habit_data["Streak_cycle"].append(str(time_now()))
+                habit_data["Complete"] = True
+                habit_data["Previous_Timer"] = habit_data["Timer"] 
+                habit_data["Timer"] = str(datetime.datetime.strptime(habit_data["Timer"], "%Y-%m-%d %H:%M:%S.%f") + datetime.timedelta(days=habit_data["Time_Frame"]))
+                print("\033[1m\033[92m Habit completed! \033[0m")
+
+            if habit_data["Counter_History"] != [] and habit_data["Start_Time"] != [] and habit_data["Streak_cycle"] != []:
+                Streak = (datetime.datetime.strptime(habit_data["Counter_History"][-1], "%Y-%m-%d %H:%M:%S.%f") - datetime.datetime.strptime(habit_data["Start_Time"][-1], "%Y-%m-%d %H:%M:%S.%f")).total_seconds()
+                if habit_data["BestStreak"] <= Streak:
+                    habit_data["BestStreak"] = Streak
+
+            if habit_data["Timer"] != "":
+                time_difference = (datetime.datetime.strptime(habit_data["Timer"], "%Y-%m-%d %H:%M:%S.%f").replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=habit_data["Time_Frame"]) - time_now()).total_seconds()
+                if time_difference <= 0:
+                    habit_data["Streak_cycle"] = []
+                    habit_data["Start_Time"] = []
+                    habit_data["Complete"] = False
+                    habit_data["Counter"] = 0
+                    habit_data["Timer"] = ""
+                    habit_data["Previous_Timer"] = ""
+                    print("\033[1m\033[91m You abandoned a habit! \033[0m")
+            
+            if habit_data["Previous_Timer"] != "":
+                previous_time_difference = (datetime.datetime.strptime(habit_data["Previous_Timer"], "%Y-%m-%d %H:%M:%S.%f").replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=habit_data["Time_Frame"]) - time_now()).total_seconds()
+                if previous_time_difference <= 0:
+                    habit_data["Counter"] = 0
+                    habit_data["Complete"] = False
+                    habit_data["Previous_Timer"] = ""
+        self.save_data()
+        
+    def save_data(self):
+        """Save data to Json file 
+        """
+        # Save data to the JSON file
+        with open(self.data_file_path, 'w') as file:
+            json.dump(self.data, file, indent=2)
+
+    def load_data(self):
+        """Load data from Json file if not available creates it  
+        """
+        # Check if the JSON file exists if so laod it if not create it
+        if os.path.exists(self.data_file_path):
+            with open(self.data_file_path, 'r') as file:
+                self.data = json.load(file)
+            self.update_habit_status()
+        # If the data file doesn't exist, create a default
         else:
-            x = " or (" + str(x) + " day)"
-        return x
+            self.initialize_default_data()
+
+    def initialize_default_data(self):
+        """Add 5 predefined habits 
+        """
+        self.data = {"Habits": {}}
+        self.add_habit("Sleep", "Sleep on time", 1, 1)
+        self.add_habit("Workout", "Workout 1 hour", 1, 1)
+        self.add_habit("Cigarettes", "No Smoking", 1, 1)
+        self.add_habit("Alcohol", "No Alcohol", 7, 5)
+        self.add_habit("Journal", "Journal your week", 7, 3)
+        self.save_data()
+# Functions after this line are regarding visualisation(table) and the analizing functions
+    def table_reset(self):
+        """Reset the visual table  
+        """
+        table = PrettyTable()
+        table.clear_rows()
+        table.horizontal_char = "\033[1m═\033[0m"
+        table.vertical_char = "\033[1m║\033[0m"
+        table.junction_char = "\033[1m╬\033[0m"
+        table.top_junction_char = "\033[1m╦\033[0m"
+        table.bottom_junction_char = "\033[1m╩\033[0m"
+        table.left_junction_char = "\033[1m╠\033[0m"
+        table.right_junction_char = "\033[1m╣\033[0m"
+        table.top_left_junction_char = "\033[1m╔\033[0m"
+        table.top_right_junction_char = "\033[1m╗\033[0m"
+        table.bottom_left_junction_char = "\033[1m╚\033[0m"
+        table.bottom_right_junction_char = "\033[1m╝\033[0m"
+        return table
+    
+    def habits_table(self):
+        """Display a table of habits with useful information 
+        """
+        table = self.table_reset()
+        table.field_names = [
+            "\033[1m\033[93m Title of Habit \033[0m",
+            "\033[1m\033[93m Periodicity \033[0m",
+            "\033[1m\033[93m Task Frequency \033[0m",
+            "\033[1m\033[93m Description of your goal \033[0m",
+            "\033[1m\033[93m Status \033[0m",
+            "\033[1m\033[93m Remaining Time \033[0m",
+            "\033[1m\033[93m Current Streak \033[0m",
+            "\033[1m\033[93m Best Streak \033[0m",
+            "\033[1m\033[93m Started \033[0m",
+            "\033[1m\033[93m Created \033[0m",
+        ]
+
+        for habit, details in self.data["Habits"].items():
+            frequency_col = "\033[96m " + str(details['Frequency']) + " \033[0m"
+
+            if details['Time_Frame'] == 1:
+                periodicity_col = "\033[96m Daily \033[0m"
+            else:
+                periodicity_col = "\033[96m Weekly \033[0m"
+
+            status_col = f"\033[92m {details['Counter']}/{details['Frequency']} \033[0m" if details['Counter'] >= details['Frequency'] else f"\033[91m {details['Counter']}/{details['Frequency']} \033[0m"
+
+            if details["Timer"] != "" and details["Complete"] == False:
+                time_difference = str((datetime.datetime.strptime(details["Timer"], "%Y-%m-%d %H:%M:%S.%f").replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=details["Time_Frame"]) - time_now())).split(",")[0]
+                remaining_time_col = f'\033[92m {time_difference} \033[0m'
+            elif details["Timer"] != "" and details["Complete"] == True:
+                remaining_time_col = f'\033[92m Completed \033[0m'
+            else:
+                remaining_time_col = "\033[90m - \033[0m"
+
+            if details["Counter_History"] != [] and details["Start_Time"] != [] and details["Streak_cycle"] != []:
+                Streak = str(datetime.datetime.strptime(details["Counter_History"][-1], "%Y-%m-%d %H:%M:%S.%f") - datetime.datetime.strptime(details["Start_Time"][-1], "%Y-%m-%d %H:%M:%S.%f")).split(",")[0]
+                if 'day' not in Streak:
+                    current_streak_col = f'\033[95m 0 days \033[0m'
+                else:
+                    current_streak_col = f'\033[95m {Streak} \033[0m'
+            else:
+                current_streak_col = "\033[90m - \033[0m"
+            
+            if details["BestStreak"] == 0:
+                best_streak_col = "\033[90m - \033[0m"
+            else:
+                best_streak = str(datetime.timedelta(seconds=details["BestStreak"])).split(",")[0]
+                if 'day' not in best_streak:
+                    best_streak_col = f'\033[95m 0 days \033[0m'
+                else:
+                    best_streak_col = f'\033[95m {best_streak} \033[0m'
+
+            if details['Start_Time'] == []:
+                start_time_col = f"\033[94m Not yet \033[0m"
+            else:
+                start_time_col = f"\033[94m {datetime.datetime.strptime(details['Start_Time'][-1], '%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%d')} \033[0m"
+
+            table.add_row([
+                f"\033[96m {habit} \033[0m",
+                periodicity_col,
+                frequency_col,
+                f"\033[95m {details['Goal']} \033[0m",
+                status_col,
+                remaining_time_col,
+                current_streak_col,
+                best_streak_col,
+                start_time_col,
+                f"\033[94m {datetime.datetime.strptime(details['Created'], '%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%d')} \033[0m",
+            ])
+        print(table)
+# The analizing functions
+    def all_habits_list(self,show_table=False):
+        """Return a list of all the habits available.
+        Args:
+            show_table (bool): if enabled displays a table.
+        Returns:
+            list: contains strings of habit names.
+        """
+        habits_list = [habit for habit in self.data["Habits"]]
+        if show_table == True:
+            names_list = ["\033[1m Habits: \033[0m"]
+            status_list = ["\033[1m Status: \033[0m"]
+            for habit,details in self.data["Habits"].items():       
+                names_list.append("\033[93m " + habit + " \033[0m")
+                if len(details["Streak_cycle"]) == 0:
+                    status_list.append("\033[91m Not Active \033[0m")
+                elif len(details["Streak_cycle"]) != 0:
+                    status_list.append("\033[92m Active \033[0m")
+            table = self.table_reset()
+            table.field_names = names_list
+            table.add_row(status_list)
+            print(table)
+        return habits_list
+    
+    def all_daily_habits_list(self,show_table=False):
+        """Generate a list of all the daily habits available.
+        Args:
+            show_table (bool): if enabled displays a table.
+        Returns:
+            list: contains strings of habit names.
+        """
+        habits_list = [habit for habit, details in self.data["Habits"].items() if details["Time_Frame"] == 1]
+        if show_table == True:
+            names_list = ["\033[1m Habits: \033[0m"]
+            status_list = ["\033[1m Status: \033[0m"]
+            for habit,details in self.data["Habits"].items():
+                if details["Time_Frame"] == 1:    
+                    names_list.append("\033[93m " + habit + " \033[0m")
+                    if len(details["Streak_cycle"]) == 0:
+                        status_list.append("\033[91m Not Active \033[0m")
+                    elif len(details["Streak_cycle"]) != 0:
+                        status_list.append("\033[92m Active \033[0m")
+            table = self.table_reset()
+            table.field_names = names_list
+            table.add_row(status_list)
+            print(table)
+        return habits_list
+
+    def all_weekly_habits_list(self,show_table=False):
+        """Generate a list of all the weekly habits available.
+        Args:
+            show_table (bool): if enabled displays a table.
+        Returns:
+            list: contains strings of habit names.
+        """
+        habits_list = [habit for habit, details in self.data["Habits"].items() if details["Time_Frame"] == 7]
+        if show_table == True:
+            names_list = ["\033[1m Habits: \033[0m"]
+            status_list = ["\033[1m Status: \033[0m"]
+            for habit,details in self.data["Habits"].items():
+                if details["Time_Frame"] == 7:     
+                    names_list.append("\033[93m " + habit + " \033[0m")
+                    if len(details["Streak_cycle"]) == 0:
+                        status_list.append("\033[91m Not Active \033[0m")
+                    elif len(details["Streak_cycle"]) != 0:
+                        status_list.append("\033[92m Active \033[0m")
+            table = self.table_reset()
+            table.field_names = names_list
+            table.add_row(status_list)
+            print(table)
+        return habits_list
+
+    def longest_streak_of_all_habits(self,show_table=False):
+        """Return the longest run streak of all defined habits.
+        Args:
+            show_table (bool): if enabled displays a table.
+        Returns:
+            str: name of a habit.
+        """
+        habit_streak_list = []
+        for habit,details in self.data["Habits"].items():
+            if details["Counter_History"] != [] and details["Start_Time"] != [] and details["Streak_cycle"] != []:
+                Streak = (datetime.datetime.strptime(details["Counter_History"][-1], "%Y-%m-%d %H:%M:%S.%f") - datetime.datetime.strptime(details["Start_Time"][-1], "%Y-%m-%d %H:%M:%S.%f")).total_seconds()
+                habit_streak_list.append((habit,Streak))
+        if habit_streak_list != []:
+            max_streak = max(habit_streak_list, key=lambda x: x[1])
+            if show_table == True:
+                table = self.table_reset()
+                table.field_names = ["\033[1m Longest on going habit: \033[0m",f"\033[1m\033[93m {max_streak[0]} \033[0m"]
+                table.add_row(["\033[1m Current streak: \033[0m",f"\033[1m\033[93m {str(datetime.timedelta(seconds=max_streak[1]))} \033[0m"])
+                print(table)
+            return max_streak[0]
+        else:
+            print("\033[1m\033[91m No habits active! \033[0m")
+            return "Unavailable"
+
+    def longest_streak_of_habit(self, habit_title,show_table=False):
+        """Return the longest run streak for a given habit.
+        Args:
+            show_table (bool): if enabled displays a table.
+        Returns:
+            str: longest streak in date and time.
+        """
+        if habit_title in self.data["Habits"]:
+            max_streak = str(datetime.timedelta(seconds=self.data["Habits"][habit_title]["BestStreak"]))
+            if show_table == True:
+                table = self.table_reset()
+                table.field_names = ["\033[1m Habit: \033[0m",f"\033[1m\033[93m {habit_title} \033[0m"]
+                table.add_row(["\033[1m Best Streak: \033[0m",f"\033[1m\033[93m {max_streak} \033[0m"])
+                print(table)    
+            return max_streak
+        else:
+            print("\033[1m\033[91m Habit not found! \033[0m")
+            return "Unavailable"
+
+if __name__ == "__main__":
+    habits = Tracker()
+    habits.habits_table()
